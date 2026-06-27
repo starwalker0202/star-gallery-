@@ -279,14 +279,15 @@ function shootStar() {
   star.style.top = startY + "px";
   const rot = "rotate(" + angleDeg + "deg)";
 
+  star.style.opacity = "0";
   stage.appendChild(star);
-  star.animate([
+  const anim = star.animate([
     { transform: "translate(0,0) " + rot, opacity: 0 },
     { opacity: 1, offset: 0.15 },
-    { opacity: 1, offset: 0.7 },
+    { opacity: 1, offset: 0.78 },
     { transform: "translate(" + dx + "px," + dy + "px) " + rot, opacity: 0 }
-  ], { duration: 850, easing: "cubic-bezier(.4,0,.7,1)" });
-  setTimeout(function(){ star.remove(); }, 900);
+  ], { duration: 850, easing: "cubic-bezier(.4,0,.7,1)", fill: "forwards" });
+  anim.onfinish = function(){ star.remove(); };
 }
 document.getElementById("lb-shoot").onclick = function(e){ e.stopPropagation(); shootStar(); };
 
