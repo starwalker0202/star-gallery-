@@ -88,13 +88,15 @@
   }
 
   /* 流れ星（写真の上に流れる。細く繊細に） */
+  /* 頭=点を原点に、尾は要素の右方向へ伸ばす。要素ごと進行方向に回転させるので */
+  /* 尾は常に進行方向の真後ろに残る。 */
   .shooting-star {
     position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%;
     box-shadow: 0 0 6px 1px rgba(255,255,255,.95); pointer-events: none; z-index: 2;
   }
   .shooting-star::after {
-    content: ""; position: absolute; top: 50%; right: 2px; width: 90px; height: 1px;
-    background: linear-gradient(to left, rgba(255,255,255,.85), transparent); transform: translateY(-50%);
+    content: ""; position: absolute; top: 50%; left: 1px; width: 95px; height: 1px;
+    background: linear-gradient(to right, rgba(255,255,255,.9), transparent); transform: translateY(-50%);
   }
 
   footer { text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .1em; margin-top: 40px; font-family: 'Helvetica Neue', sans-serif; }
@@ -256,24 +258,33 @@ document.addEventListener("keydown", function(e){
 });
 
 // 流れ星（個別画面の写真の上を、細くすばやく流れる）
+// 頭が進行方向の先頭、尾は進行方向の真後ろに伸びる。
 function shootStar() {
   const w = stage.clientWidth;
   const h = stage.clientHeight;
   if (!w || !h) return;
   const star = document.createElement("div");
   star.className = "shooting-star";
-  const startX = w * (0.45 + Math.random() * 0.45);
-  const startY = h * (0.08 + Math.random() * 0.30);
-  const dist = Math.min(w, 520) * (0.5 + Math.random() * 0.3);
+
+  // 進行方向（右上から左下へ斜めに流す）
+  const dist = Math.min(w, 560) * (0.5 + Math.random() * 0.3);
+  const dx = -dist;
+  const dy = dist * (0.30 + Math.random() * 0.20);
+  // 尾はCSSで右(+x)に伸ばしている。要素を進行方向へ向ければ尾は真後ろに残る。
+  const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI + 180;
+
+  const startX = w * (0.55 + Math.random() * 0.35);
+  const startY = h * (0.08 + Math.random() * 0.28);
   star.style.left = startX + "px";
   star.style.top = startY + "px";
-  star.style.transform = "rotate(20deg)";
+  const rot = "rotate(" + angleDeg + "deg)";
+
   stage.appendChild(star);
   star.animate([
-    { transform: "translate(0,0) rotate(20deg)", opacity: 0 },
+    { transform: "translate(0,0) " + rot, opacity: 0 },
     { opacity: 1, offset: 0.15 },
     { opacity: 1, offset: 0.7 },
-    { transform: "translate(-" + dist + "px," + (dist * 0.36) + "px) rotate(20deg)", opacity: 0 }
+    { transform: "translate(" + dx + "px," + dy + "px) " + rot, opacity: 0 }
   ], { duration: 850, easing: "cubic-bezier(.4,0,.7,1)" });
   setTimeout(function(){ star.remove(); }, 900);
 }
