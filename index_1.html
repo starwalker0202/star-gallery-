@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12か月の星空風景</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0a0e1f; --navy2: #0f1530; --ink: #e8e9f3; --muted: #8b90b5;
+    --gold: #e6c87a; --star: #a9c7ff; --line: #1c2447; --edge: #2c356a;
+  }
+  body {
+    background: radial-gradient(ellipse at 50% -10%, #16204a 0%, var(--navy) 55%, #05060f 100%);
+    background-attachment: fixed; color: var(--ink);
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    min-height: 100vh; padding-bottom: 64px; overflow-x: hidden;
+  }
+  @keyframes twinkle { 0%,100%{opacity:.35} 50%{opacity:1} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #2a3258; border-radius: 3px; }
+
+  header { padding: 56px 24px 28px; text-align: center; max-width: 760px; margin: 0 auto; }
+  .eyebrow { font-family: 'Helvetica Neue', sans-serif; letter-spacing: .35em; font-size: 11px; color: var(--star); margin-bottom: 20px; }
+  h1 { font-size: clamp(30px, 6.5vw, 48px); font-weight: 400; line-height: 1.2; }
+  h1 .accent { color: var(--gold); }
+  .subtitle { color: var(--muted); font-size: 14px; line-height: 1.9; margin-top: 18px; }
+
+  .shoot-btn {
+    margin-top: 26px; background: transparent; border: 1px solid var(--edge); color: var(--star);
+    font-family: 'Hiragino Mincho ProN', serif; font-size: 13px; letter-spacing: .15em;
+    padding: 9px 20px; border-radius: 22px; cursor: pointer; transition: all .25s;
+  }
+  .shoot-btn:hover { background: var(--navy2); border-color: var(--gold); color: var(--gold); }
+
+  nav { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 16px; max-width: 900px; margin: 0 auto; }
+  .month-btn {
+    flex: 0 0 auto; position: relative; min-width: 64px; padding: 12px 10px;
+    background: transparent; border: 1px solid transparent; border-radius: 12px;
+    color: var(--muted); cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; transition: all .25s; font-family: inherit;
+  }
+  .month-btn.active { background: var(--navy2); border: 1px solid var(--edge); color: var(--ink); box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+  .month-btn .kanji { font-size: 17px; }
+  .month-btn .num { font-size: 10px; font-family: 'Helvetica Neue', sans-serif; letter-spacing: .05em; }
+  .month-btn .dot { position: absolute; top: 4px; right: 6px; font-size: 9px; min-width: 16px; height: 16px; line-height: 16px; border-radius: 8px; background: var(--edge); color: var(--star); font-family: sans-serif; }
+  .month-btn.active .dot { background: var(--gold); color: var(--navy); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 20px; }
+  .month-head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 24px; }
+  .month-title { font-size: 28px; font-weight: 400; display: flex; align-items: baseline; gap: 12px; }
+  .month-title .mnum { font-size: 13px; color: var(--star); font-family: 'Helvetica Neue', sans-serif; letter-spacing: .1em; }
+  .month-count { color: var(--muted); font-size: 12px; font-family: sans-serif; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; }
+  .card { cursor: pointer; }
+  .card-img-wrap { aspect-ratio: 3/2; overflow: hidden; border-radius: 10px; background: var(--navy2); border: 1px solid var(--line); }
+  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+  .card:hover img { transform: scale(1.04); }
+  .caption { padding: 12px 4px 0; }
+  .cap-title { font-size: 15px; color: var(--ink); display: block; }
+
+  .status { text-align: center; padding: 60px 24px; color: var(--muted); font-size: 14px; line-height: 2; }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--edge); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 18px; }
+  .empty { border: 1px dashed var(--edge); border-radius: 16px; padding: 72px 24px; text-align: center; }
+  .empty .const { font-size: 32px; color: var(--star); animation: twinkle 2.5s infinite; margin-bottom: 16px; }
+  .empty p { color: var(--muted); font-size: 14px; line-height: 2; }
+
+  .lightbox { position: fixed; inset: 0; background: rgba(2,3,8,.94); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; z-index: 100; }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 88vw; max-height: 76vh; object-fit: contain; border-radius: 8px; }
+  .lightbox .lb-title { font-size: 17px; color: var(--ink); }
+  .lb-close { position: absolute; top: 20px; right: 24px; background: transparent; border: 1px solid var(--edge); color: var(--ink); width: 40px; height: 40px; border-radius: 20px; font-size: 16px; cursor: pointer; z-index: 2; }
+  .lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(15,21,48,.6); border: 1px solid var(--edge); color: var(--ink);
+    width: 52px; height: 52px; border-radius: 50%; font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .25s; z-index: 2;
+  }
+  .lb-nav:hover { background: var(--navy2); border-color: var(--gold); color: var(--gold); }
+  .lb-prev { left: 20px; }
+  .lb-next { right: 20px; }
+  .lb-counter { font-family: 'Helvetica Neue', sans-serif; font-size: 12px; color: var(--muted); letter-spacing: .1em; }
+  @media (max-width: 600px) {
+    .lb-nav { width: 42px; height: 42px; font-size: 18px; }
+    .lb-prev { left: 8px; } .lb-next { right: 8px; }
+  }
+
+  /* 流れ星 */
+  #shooting-layer { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+  .shooting-star {
+    position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%;
+    box-shadow: 0 0 8px 2px rgba(255,255,255,.9);
+  }
+  .shooting-star::after {
+    content: ""; position: absolute; top: 50%; right: 3px; width: 160px; height: 1.5px;
+    background: linear-gradient(to left, rgba(255,255,255,.9), transparent); transform: translateY(-50%);
+  }
+
+  footer { text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .1em; margin-top: 40px; font-family: 'Helvetica Neue', sans-serif; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">STARSCAPE · 星景写真</div>
+    <h1>12か月の<span class="accent">星空風景</span></h1>
+    <p class="subtitle">月ごとに巡る、夜空の記録。</p>
+    <button class="shoot-btn" id="shoot-btn">☆ 流れ星</button>
+  </header>
+
+  <nav id="nav"></nav>
+
+  <main>
+    <div class="month-head" id="month-head" style="display:none">
+      <h2 class="month-title"><span id="month-kanji"></span><span class="mnum" id="month-num"></span></h2>
+      <span class="month-count" id="month-count"></span>
+    </div>
+    <div id="gallery">
+      <div class="status"><div class="spinner"></div>星空を読み込んでいます…</div>
+    </div>
+  </main>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lb-nav lb-prev" id="lb-prev">‹</button>
+    <img id="lb-img" src="" alt="">
+    <div class="lb-title" id="lb-title"></div>
+    <div class="lb-counter" id="lb-counter"></div>
+    <button class="lb-nav lb-next" id="lb-next">›</button>
+    <button class="lb-close" id="lb-close">✕</button>
+  </div>
+
+  <div id="shooting-layer"></div>
+
+  <footer>星景写真 · starwalker0202</footer>
+
+<script>
+const MONTHS = ["睦月","如月","弥生","卯月","皐月","水無月","文月","葉月","長月","神無月","霜月","師走"];
+const MONTH_NUM = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const IMG_EXT = /\.(jpg|jpeg|png|webp|gif)$/i;
+
+let PHOTOS = [];
+let activeMonth = 1;
+let currentList = [];
+let currentIndex = 0;
+
+const nav = document.getElementById("nav");
+const gallery = document.getElementById("gallery");
+const monthHead = document.getElementById("month-head");
+const lightbox = document.getElementById("lightbox");
+
+function detectRepo() {
+  const host = location.hostname;
+  const owner = host.split(".")[0];
+  const parts = location.pathname.split("/").filter(Boolean);
+  const repo = parts.length > 0 ? parts[0] : (owner + ".github.io");
+  return { owner: owner, repo: repo };
+}
+
+async function loadPhotos() {
+  const r = detectRepo();
+  const api = "https://api.github.com/repos/" + r.owner + "/" + r.repo + "/contents/";
+  try {
+    const res = await fetch(api);
+    if (!res.ok) throw new Error("API " + res.status);
+    const files = await res.json();
+    PHOTOS = files
+      .filter(function(f){ return f.type === "file" && IMG_EXT.test(f.name); })
+      .map(function(f, i){
+        const m = f.name.match(/^(\d{2})[_-](.+)\.(jpg|jpeg|png|webp|gif)$/i);
+        const month = m ? parseInt(m[1], 10) : 0;
+        const title = m ? m[2] : f.name.replace(IMG_EXT, "");
+        return { id: "p" + i, src: f.name, title: title, month: month };
+      })
+      .filter(function(p){ return p.month >= 1 && p.month <= 12; })
+      .sort(function(a, b){ return a.title.localeCompare(b.title, "ja"); });
+
+    if (PHOTOS.length === 0) {
+      gallery.innerHTML = '<div class="empty"><div class="const">✦</div><p>まだ写真がありません。<br>「月_タイトル.jpg」の名前でアップロードしてください。</p></div>';
+      return;
+    }
+    let first = -1;
+    for (let i = 0; i < 12; i++) {
+      if (PHOTOS.some(function(p){ return p.month === i + 1; })) { first = i; break; }
+    }
+    activeMonth = first >= 0 ? first + 1 : 1;
+    monthHead.style.display = "flex";
+    render();
+  } catch (e) {
+    gallery.innerHTML = '<div class="empty"><div class="const">✦</div><p>写真の読み込みに失敗しました。<br>少し時間をおいて再読み込みしてください。</p></div>';
+  }
+}
+
+function countByMonth(m) { return PHOTOS.filter(function(p){ return p.month === m; }).length; }
+
+function renderNav() {
+  nav.innerHTML = "";
+  MONTH_NUM.forEach(function(label, i){
+    const m = i + 1;
+    const count = countByMonth(m);
+    const btn = document.createElement("button");
+    btn.className = "month-btn" + (m === activeMonth ? " active" : "");
+    btn.innerHTML = '<span class="kanji">' + MONTHS[i] + '</span><span class="num">' + label + '</span>' +
+      (count > 0 ? '<span class="dot">' + count + '</span>' : "");
+    btn.onclick = function(){ activeMonth = m; render(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+    nav.appendChild(btn);
+  });
+}
+
+function render() {
+  renderNav();
+  document.getElementById("month-kanji").textContent = MONTHS[activeMonth - 1];
+  document.getElementById("month-num").textContent = MONTH_NUM[activeMonth - 1];
+  currentList = PHOTOS.filter(function(p){ return p.month === activeMonth; });
+  document.getElementById("month-count").textContent = currentList.length + " 枚";
+
+  if (currentList.length === 0) {
+    gallery.className = "";
+    gallery.innerHTML = '<div class="empty"><div class="const">✦</div><p>この月の星空はまだありません。</p></div>';
+    return;
+  }
+  gallery.className = "grid";
+  gallery.innerHTML = "";
+  currentList.forEach(function(p, idx){
+    const fig = document.createElement("figure");
+    fig.className = "card";
+    fig.innerHTML = '<div class="card-img-wrap"><img src="' + encodeURIComponent(p.src) + '" alt="' + p.title + '" loading="lazy"></div>' +
+      '<figcaption class="caption"><span class="cap-title">' + p.title + '</span></figcaption>';
+    fig.onclick = function(){ openLightbox(idx); };
+    gallery.appendChild(fig);
+  });
+}
+
+function showCurrent() {
+  const p = currentList[currentIndex];
+  document.getElementById("lb-img").src = encodeURIComponent(p.src);
+  document.getElementById("lb-title").textContent = p.title;
+  document.getElementById("lb-counter").textContent = (currentIndex + 1) + " / " + currentList.length;
+  const multi = currentList.length > 1;
+  document.getElementById("lb-prev").style.display = multi ? "flex" : "none";
+  document.getElementById("lb-next").style.display = multi ? "flex" : "none";
+}
+function openLightbox(idx) { currentIndex = idx; showCurrent(); lightbox.classList.add("show"); }
+function nextPhoto() { currentIndex = (currentIndex + 1) % currentList.length; showCurrent(); }
+function prevPhoto() { currentIndex = (currentIndex - 1 + currentList.length) % currentList.length; showCurrent(); }
+
+document.getElementById("lb-close").onclick = function(){ lightbox.classList.remove("show"); };
+document.getElementById("lb-next").onclick = function(e){ e.stopPropagation(); nextPhoto(); };
+document.getElementById("lb-prev").onclick = function(e){ e.stopPropagation(); prevPhoto(); };
+lightbox.onclick = function(e){ if (e.target === lightbox) lightbox.classList.remove("show"); };
+document.addEventListener("keydown", function(e){
+  if (!lightbox.classList.contains("show")) return;
+  if (e.key === "Escape") lightbox.classList.remove("show");
+  else if (e.key === "ArrowRight") nextPhoto();
+  else if (e.key === "ArrowLeft") prevPhoto();
+});
+
+// 流れ星
+function shootStar() {
+  const layer = document.getElementById("shooting-layer");
+  const star = document.createElement("div");
+  star.className = "shooting-star";
+  const startX = window.innerWidth * (0.55 + Math.random() * 0.35);
+  const startY = window.innerHeight * (0.05 + Math.random() * 0.25);
+  const dist = 320 + Math.random() * 240;
+  star.style.left = startX + "px";
+  star.style.top = startY + "px";
+  star.style.transform = "translate(0,0) rotate(25deg)";
+  star.style.opacity = "0";
+  layer.appendChild(star);
+  star.animate([
+    { transform: "translate(0,0) rotate(25deg)", opacity: 0 },
+    { opacity: 1, offset: 0.1 },
+    { opacity: 1, offset: 0.8 },
+    { transform: "translate(-" + dist + "px," + (dist * 0.5) + "px) rotate(25deg)", opacity: 0 }
+  ], { duration: 1100, easing: "ease-in" });
+  setTimeout(function(){ star.remove(); }, 1200);
+}
+document.getElementById("shoot-btn").onclick = shootStar;
+
+loadPhotos();
+</script>
+</body>
+</html>
