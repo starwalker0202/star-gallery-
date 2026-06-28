@@ -465,28 +465,40 @@ const Slideshow = {
   playBgm(){
     const bgm=document.getElementById("bgm");
     this.bgmIdx=0;
-    const next=()=>{
+    const load=()=>{
       const file=CONFIG.bgm[this.bgmIdx % CONFIG.bgm.length];
-      bgm.src=Gallery.rawUrl(file);
-      this.bgmIdx++;
-      bgm.play().catch(err=>this.bgmHint(file,err));
+      this.curFile=file;
+      this.triedRaw=false;
+      bgm.src=file;                    // ① まずサイト内の相対パスで試す
+      bgm.load();
+      bgm.play().catch(()=>{});        // 自動再生ブロック対策（onerrorで拾う）
     };
-    bgm.onended=next;
-    bgm.onerror=()=>this.bgmHint(CONFIG.bgm[(this.bgmIdx-1+CONFIG.bgm.length)%CONFIG.bgm.length],bgm.error);
-    next();
+    bgm.onended=()=>{ this.bgmIdx++; load(); };
+    bgm.onerror=()=>{
+      if(!this.triedRaw){               // ② 相対パスがダメなら raw URL に切替
+        this.triedRaw=true;
+        bgm.src=Gallery.rawUrl(this.curFile);
+        bgm.load();
+        bgm.play().catch(()=>{});
+      }else{
+        this.bgmHint(this.curFile);     // ③ どちらもダメなら画面に表示
+      }
+    };
+    bgm.oncanplay=()=>{ bgm.play().catch(()=>{}); };
+    load();
   },
-  bgmHint(file,err){
+  bgmHint(file){
     const h=document.querySelector(".ss-hint");
     h.style.color="#e8d6a0";
-    h.textContent="♪ "+file+" を再生できませんでした。ファイル名・配置・形式をご確認ください。";
-    console.warn("BGM error:",file,err);
+    h.textContent="♪ "+file+" が見つかりません。リポジトリ直下に置き、名前（大文字小文字）を確認してください。";
+    console.warn("BGM error:",file);
   },
   stop(){
     clearInterval(this.timer);this.timer=null;
     document.getElementById("slideshow").classList.remove("open");
     document.getElementById("ssA").classList.remove("show");
     document.getElementById("ssB").classList.remove("show");
-    const bgm=document.getElementById("bgm");bgm.pause();bgm.onended=null;bgm.onerror=null;
+    const bgm=document.getElementById("bgm");bgm.pause();bgm.onended=null;bgm.onerror=null;bgm.oncanplay=null;
     if(document.fullscreenElement) document.exitFullscreen?.();
   }
 };
