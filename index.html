@@ -148,7 +148,7 @@ header p.lead{margin-top:26px;color:var(--muted);font-size:.95rem;letter-spacing
 .shooting{position:fixed;z-index:80;pointer-events:none;width:3px;height:3px;background:var(--star);border-radius:50%;
   box-shadow:0 0 8px 2px rgba(244,247,255,.9)}
 /* しっぽは頭から後方へ伸ばす。向きは移動方向に合わせてJSで回転させる */
-.shooting .tail{position:absolute;top:50%;left:50%;width:170px;height:1.5px;
+.shooting .tail{position:absolute;top:50%;left:50%;width:130px;height:1.5px;
   transform-origin:left center;
   background:linear-gradient(90deg,rgba(244,247,255,.95),transparent)}
 
@@ -415,19 +415,31 @@ function shootStar(){
   const s=document.createElement("div");s.className="shooting";
   const tail=document.createElement("div");tail.className="tail";
   s.appendChild(tail);
-  const startX=window.innerWidth*(0.3+Math.random()*0.6);
-  const startY=window.innerHeight*(0.1+Math.random()*0.3);
+
+  // 表示中の写真の領域を基準にする（なければ画面全体）
+  const img=document.getElementById("lbImg");
+  const r=(img&&img.getBoundingClientRect().width)
+            ? img.getBoundingClientRect()
+            : {left:0,top:0,width:window.innerWidth,height:window.innerHeight};
+
+  // 出現点：写真のやや右上（横78%・縦20%あたり）に固定
+  const startX=r.left+r.width*0.78;
+  const startY=r.top +r.height*0.20;
   s.style.left=startX+"px";s.style.top=startY+"px";
   document.body.appendChild(s);
-  // 進行方向のベクトル
-  const dx=-(200+Math.random()*220), dy=160+Math.random()*160;
-  // しっぽは「進行方向の真後ろ」に向ける = ベクトルと逆向き
-  const angle=Math.atan2(dy,dx)*180/Math.PI;   // 進む向きの角度
-  tail.style.transform=`rotate(${angle+180}deg)`; // +180で真逆＝しっぽ
+
+  // 移動量：写真サイズに対する割合で固定 → 必ず写真内を左下へ流れる
+  const dx=-r.width*0.42;   // 左へ
+  const dy= r.height*0.48;  // 下へ
+
+  // しっぽは進行方向の真後ろ（＝右上）に向ける
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  tail.style.transform=`rotate(${angle+180}deg)`;
+
   s.animate([
     {transform:"translate(0,0)",opacity:1},
     {transform:`translate(${dx}px,${dy}px)`,opacity:0}
-  ],{duration:900+Math.random()*300,easing:"cubic-bezier(.4,0,.6,1)"})
+  ],{duration:1100,easing:"cubic-bezier(.4,0,.6,1)"})
    .onfinish=()=>s.remove();
 }
 
