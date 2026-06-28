@@ -93,7 +93,7 @@ header p.lead{margin-top:26px;color:var(--muted);font-size:.95rem;letter-spacing
 /* ───── ギャラリー グリッド ───── */
 #status{text-align:center;color:var(--muted);padding:50px 0;letter-spacing:.1em;font-size:.9rem}
 .grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  display:grid;grid-template-columns:repeat(3,1fr);
   gap:18px;margin:30px 0 10px;min-height:120px;
 }
 .card{
@@ -183,7 +183,7 @@ footer .copy{margin-top:24px;color:var(--muted);font-size:.72rem;letter-spacing:
   header{padding:60px 20px 30px}
   .lb-prev{left:8px}.lb-next{right:8px}
   .lb-nav{width:46px;height:46px}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.1ms!important}
@@ -434,6 +434,8 @@ const Slideshow = {
     else                    this.seq=Gallery.all.slice();
     if(!this.seq.length){alert("写真がまだありません。");return;}
     this.idx=0;
+    const h=document.querySelector(".ss-hint");
+    h.style.color="";h.textContent="♪ BGM 再生中 ― 画面のどこでも操作できます";
     document.getElementById("slideshow").classList.add("open");
     this.playBgm();
     this.show(true);
@@ -464,19 +466,27 @@ const Slideshow = {
     const bgm=document.getElementById("bgm");
     this.bgmIdx=0;
     const next=()=>{
-      bgm.src=CONFIG.bgm[this.bgmIdx % CONFIG.bgm.length];
+      const file=CONFIG.bgm[this.bgmIdx % CONFIG.bgm.length];
+      bgm.src=Gallery.rawUrl(file);
       this.bgmIdx++;
-      bgm.play().catch(()=>{});
+      bgm.play().catch(err=>this.bgmHint(file,err));
     };
     bgm.onended=next;
+    bgm.onerror=()=>this.bgmHint(CONFIG.bgm[(this.bgmIdx-1+CONFIG.bgm.length)%CONFIG.bgm.length],bgm.error);
     next();
+  },
+  bgmHint(file,err){
+    const h=document.querySelector(".ss-hint");
+    h.style.color="#e8d6a0";
+    h.textContent="♪ "+file+" を再生できませんでした。ファイル名・配置・形式をご確認ください。";
+    console.warn("BGM error:",file,err);
   },
   stop(){
     clearInterval(this.timer);this.timer=null;
     document.getElementById("slideshow").classList.remove("open");
     document.getElementById("ssA").classList.remove("show");
     document.getElementById("ssB").classList.remove("show");
-    const bgm=document.getElementById("bgm");bgm.pause();bgm.onended=null;
+    const bgm=document.getElementById("bgm");bgm.pause();bgm.onended=null;bgm.onerror=null;
     if(document.fullscreenElement) document.exitFullscreen?.();
   }
 };
