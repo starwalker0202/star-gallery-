@@ -145,10 +145,12 @@ header p.lead{margin-top:26px;color:var(--muted);font-size:.95rem;letter-spacing
 .lb-btn.solid{background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:var(--night);border:none}
 
 /* ───── 流れ星 ───── */
-.shooting{position:fixed;z-index:80;pointer-events:none;width:2px;height:2px;background:var(--star);border-radius:50%;
+.shooting{position:fixed;z-index:80;pointer-events:none;width:3px;height:3px;background:var(--star);border-radius:50%;
   box-shadow:0 0 8px 2px rgba(244,247,255,.9)}
-.shooting::after{content:"";position:absolute;top:50%;right:0;width:160px;height:1px;
-  transform:translateY(-50%);background:linear-gradient(90deg,rgba(244,247,255,.9),transparent)}
+/* しっぽは頭から後方へ伸ばす。向きは移動方向に合わせてJSで回転させる */
+.shooting .tail{position:absolute;top:50%;left:50%;width:170px;height:1.5px;
+  transform-origin:left center;
+  background:linear-gradient(90deg,rgba(244,247,255,.95),transparent)}
 
 /* ───── スライドショー全画面 ───── */
 #slideshow{position:fixed;inset:0;z-index:100;display:none;background:#02040c;overflow:hidden}
@@ -411,14 +413,20 @@ const Lightbox = {
 ════════════════════════════════════════════ */
 function shootStar(){
   const s=document.createElement("div");s.className="shooting";
+  const tail=document.createElement("div");tail.className="tail";
+  s.appendChild(tail);
   const startX=window.innerWidth*(0.3+Math.random()*0.6);
   const startY=window.innerHeight*(0.1+Math.random()*0.3);
   s.style.left=startX+"px";s.style.top=startY+"px";
   document.body.appendChild(s);
+  // 進行方向のベクトル
   const dx=-(200+Math.random()*220), dy=160+Math.random()*160;
+  // しっぽは「進行方向の真後ろ」に向ける = ベクトルと逆向き
+  const angle=Math.atan2(dy,dx)*180/Math.PI;   // 進む向きの角度
+  tail.style.transform=`rotate(${angle+180}deg)`; // +180で真逆＝しっぽ
   s.animate([
-    {transform:"translate(0,0) rotate(25deg)",opacity:1},
-    {transform:`translate(${dx}px,${dy}px) rotate(25deg)`,opacity:0}
+    {transform:"translate(0,0)",opacity:1},
+    {transform:`translate(${dx}px,${dy}px)`,opacity:0}
   ],{duration:900+Math.random()*300,easing:"cubic-bezier(.4,0,.6,1)"})
    .onfinish=()=>s.remove();
 }
